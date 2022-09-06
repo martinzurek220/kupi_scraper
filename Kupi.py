@@ -57,11 +57,12 @@ for URL_line in adresy_kupi:
 
             muj_slovnik['Polozka_' + str(idx)] = {}
 
+            # Vypise typ zbozi
             muj_slovnik["Polozka_" + str(idx)]["Zbozi"] = zbozi
 
             # Vypise nazev obchodu
             # Kdyz je nazev obchodu slozen ze dvou slov napr. Tesco hypermarket, tak druhe slovo vlozi na novy radek
-            # a mezi tato slova se vlozi hodne mezer napr. Tesco                 Hypermarket a je potreba je odstranit
+            # a mezi tato slova se vlozi hodne mezer napr.: Tesco                 Hypermarket a je potreba je odstranit
             # proto .replace(" ", "") a .replace("\n", " ") -> Tesco hypermarket
             print(x.find("span", {"class": "discounts_shop_name"}).text.strip().replace(" ", "").replace("\n", " "))
             muj_slovnik["Polozka_" + str(idx)]["Obchod"] = x.find("span", {"class": "discounts_shop_name"}).text.strip().replace(" ", "").replace("\n", " ")
@@ -71,14 +72,24 @@ for URL_line in adresy_kupi:
             muj_slovnik["Polozka_" + str(idx)]["Cena"] = x.find("strong", {"class": "discount_price_value"}).text.strip()
 
             # Vypise mnozstvi
-            # Odstraneni prebyecnych znaku .replace(u'\xa0', u' ').replace("/ ", "")
-            # pr.:
+            # Odstraneni prebytecnych znaku .replace(u'\xa0', u' ').replace("/ ", "")
             print(x.find("div", {"class": "discount_amount left"}).text.strip().replace(u'\xa0', u' ').replace("/ ", ""))
             muj_slovnik["Polozka_" + str(idx)]["Mnozstvi"] = x.find("div", {"class": "discount_amount left"}).text.strip()
 
             # Vypise platnost slevy - vypise vsechny .text polozky v cele "td" strukture
-            print(x.find("td", {"class": "text-left discounts_validity valid_discount"}).text.strip())
-            muj_slovnik["Polozka_" + str(idx)]["Platnost"] = x.find("td", {"class": "text-left discounts_validity valid_discount"}).text.strip()
+            # Nekde je v html text-left discounts_validity a nekde text-left discounts_validity valid_discount. Kdyz jedno neni,
+            # program skonci s chybou. Proto je v kodu 2x try/except.
+            try:
+                print(x.find("td", {"class": "text-left discounts_validity"}).text.strip())
+                muj_slovnik["Polozka_" + str(idx)]["Platnost"] = x.find("td", {"class": "text-left discounts_validity"}).text.strip()
+            except:
+                pass
+
+            try:
+                print(x.find("td", {"class": "text-left discounts_validity valid_discount"}).text.strip())
+                muj_slovnik["Polozka_" + str(idx)]["Platnost"] = x.find("td", {"class": "text-left discounts_validity valid_discount"}).text.strip()
+            except:
+                pass
 
             # Vypise prazdny radek pro odsazeni jednotlivych obchodu
             print()
@@ -88,11 +99,13 @@ for URL_line in adresy_kupi:
         print("Pro dany produkt ted momentalne neni zadna sleva")
         print()
 
-print(f"Muj slovnik:      {muj_slovnik}")
+# print(f"Muj slovnik:      {muj_slovnik}")
 
 print()
 
-# Vypise do konzole
+vysledky = """"""
+
+# Ulozi hodnoty do stringu pro pozdejsi vyuziti
 for idx in range(len(muj_slovnik.keys())):
 
     zbozi = muj_slovnik["Polozka_" + str(idx)]["Zbozi"]
@@ -101,22 +114,16 @@ for idx in range(len(muj_slovnik.keys())):
     mnozstvi = muj_slovnik["Polozka_" + str(idx)]["Mnozstvi"].replace(u'\xa0', u' ').replace("/ ", "")
     platnost = muj_slovnik["Polozka_" + str(idx)]["Platnost"]
 
-    print(f"Zbozi: {zbozi}, Obchod: {obchod}, Cena: {cena}, Mnozstvi: {mnozstvi}, Trvani: {platnost}")
+    docasny_string = "Zbozi: " + zbozi + ", Obchod: " + obchod + ", Cena: " + cena + \
+                     ", Mnozstvi: " + mnozstvi + ", Trvani: " + platnost + "\n"
+    vysledky += docasny_string
 
+# Vypise vysledky scrapingu do konzole
+print(vysledky)
 
-# Vypise textu do souboru
+# Vypise vysledky scrapingu do souboru
 file = open("kupi.txt", "a")
-
-for idx in range(len(muj_slovnik.keys())):
-
-    zbozi = muj_slovnik["Polozka_" + str(idx)]["Zbozi"]
-    obchod = muj_slovnik["Polozka_" + str(idx)]["Obchod"]
-    cena =  muj_slovnik["Polozka_" + str(idx)]["Cena"]
-    mnozstvi = muj_slovnik["Polozka_" + str(idx)]["Mnozstvi"].replace(u'\xa0', u' ').replace("/ ", "")
-    platnost = muj_slovnik["Polozka_" + str(idx)]["Platnost"]
-
-    file.write(f"Zbozi: {zbozi}, Obchod: {obchod}, Cena: {cena}, Mnozstvi: {mnozstvi}, Trvani: {platnost}" + "\n")
-
+file.write(vysledky)
 file.close()
 
 
@@ -124,32 +131,32 @@ file.close()
 # Emaily
 ################################################################################
 
-# # Odsazeni od predchoziho textu
-# print()
+# Odsazeni od predchoziho textu
+print()
 
-# username = 'martin.email.python@email.cz'
-# password = 'Martin123'
+username = 'martin.email.python@email.cz'
+password = 'Martin123'
 
-# # Aby email fungoval hezky česky
-# message = MIMEText(f"Obchod: {ob[0]}, Cena: {ob[1]}, Mnozstvi: {ob[2]}, Trvani: {ob[3]}")
-# message['Subject'] = 'Kupi - slevy'  # Předmět
-# message['From'] = username  # Od koho
-# recipient = 'zurek.m@email.cz'  # Komu
+# Aby email fungoval hezky česky
+message = MIMEText(vysledky)
+message['Subject'] = 'Kupi - slevy'  # Předmět
+message['From'] = username  # Od koho
+recipient = 'zurek.m@email.cz'  # Komu
 
-# # Vytvoříme SMTP objekt se šifrováním pomocí SSL
-# with smtplib.SMTP_SSL('smtp.seznam.cz', 465) as smtp:
-#     print('Přihlašuji se...')
-#     try:
-#         smtp.login(username, password)
-#     except Exception as e:
-#         print('Přihlášení se nepovedlo.', e)
-#         sys.exit()
+# Vytvoříme SMTP objekt se šifrováním pomocí SSL
+with smtplib.SMTP_SSL('smtp.seznam.cz', 465) as smtp:
+    print('Přihlašuji se...')
+    try:
+        smtp.login(username, password)
+    except Exception as e:
+        print('Přihlášení se nepovedlo.', e)
+        sys.exit()
 
-#     print('Odesílám email...')
-#     try:
-#         smtp.sendmail(username, recipient, message.as_string())
-#     except Exception as e:
-#         print('Odeslání se nepovedlo.', e)
-#         sys.exit()
+    print('Odesílám email...')
+    try:
+        smtp.sendmail(username, recipient, message.as_string())
+    except Exception as e:
+        print('Odeslání se nepovedlo.', e)
+        sys.exit()
 
-#     print('OK')
+    print('OK')
