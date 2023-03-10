@@ -5,7 +5,7 @@ na kupi a poté o těchto produktech stáhne informaci o prodejci, ceně, množs
 Program je v původním stavu a není aktualizovaný.
 
 Použité knihovny:
-- Pro stahování dat je použita knihovna Beautifulsoup
+- Pro parsování dat je použita knihovna <b>Beautifulsoup</b>
 
 ## Příklad výstupu
 Zbozi: Máslo Jihočeské Madeta, Obchod: BILLA, Cena: 49,90 Kč, Mnozstvi: 250 g, Trvani: v so 11. 3. <br>
